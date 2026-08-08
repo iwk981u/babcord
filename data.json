@@ -1,0 +1,59 @@
+{
+  "users": {
+    "isaac": {
+      "password": "123",
+      "admin": true
+    },
+    "bob": {
+      "password": "password123",
+      "admin": false
+    },
+    "Chuck": {
+      "password": "Smelly",
+      "admin": false
+    }
+  },
+  "servers": {
+    "srv_default": {
+      "id": "srv_default",
+      "name": "Isaac's Realm",
+      "icon": "⚡",
+      "channels": {
+        "general": {
+          "private": false,
+          "members": []
+        },
+        "memes": {
+          "private": false,
+          "members": []
+        },
+        "gaming": {
+          "private": false,
+          "members": []
+        }
+      }
+    }
+  },
+  "messages": {
+    "srv_default:general": [
+      {
+        "user": "isaac",
+        "text": "Welcome to the new Babcord!",
+        "time": 1768081718912
+      }
+    ],
+    "srv_default:gaming": [
+      {
+        "user": "isaac",
+        "text": "GAMERZ",
+        "time": 1786225982372
+      }
+    ]
+  },
+  "pendingUsers": {
+    "isaacrrr": {
+      "password": "123",
+      "requestedAt": 1786226000751
+    }
+  }
+}
