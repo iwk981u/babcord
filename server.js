@@ -51,7 +51,6 @@ const sessions = {};
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Serve client.html as default homepage
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "client.html"));
 });
@@ -102,6 +101,19 @@ app.post("/register", (req, res) => {
     res.json({ message: "Registration submitted successfully! Please wait for Isaac to approve your account." });
 });
 
+app.post("/change-password", auth, (req, res) => {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 1) {
+        return res.status(400).json({ error: "New password required" });
+    }
+    if (data.users[req.user]) {
+        data.users[req.user].password = newPassword;
+        save(data);
+        return res.json({ success: true, message: "Password updated successfully!" });
+    }
+    res.status(404).json({ error: "User not found" });
+});
+
 app.get("/admin/pending", auth, (req, res) => {
     if (!data.users[req.user] || !data.users[req.user].admin) {
         return res.status(403).json({ error: "Admin access required" });
@@ -109,11 +121,22 @@ app.get("/admin/pending", auth, (req, res) => {
     res.json(data.pendingUsers || {});
 });
 
+app.get("/admin/users", auth, (req, res) => {
+    if (!data.users[req.user] || !data.users[req.user].admin) {
+        return res.status(403).json({ error: "Admin access required" });
+    }
+    const userList = {};
+    for (const u in data.users) {
+        userList[u] = { admin: !!data.users[u].admin };
+    }
+    res.json(userList);
+});
+
 app.post("/admin/approve", auth, (req, res) => {
     if (!data.users[req.user] || !data.users[req.user].admin) {
         return res.status(403).json({ error: "Admin access required" });
     }
-    const { username } = req.body;
+    const { username, makeAdmin } = req.body;
     if (!data.pendingUsers[username]) {
         return res.status(404).json({ error: "Pending user not found" });
     }
@@ -121,12 +144,27 @@ app.post("/admin/approve", auth, (req, res) => {
     const pending = data.pendingUsers[username];
     data.users[username] = {
         password: pending.password,
-        admin: false
+        admin: !!makeAdmin
     };
     delete data.pendingUsers[username];
     save(data);
 
     res.json({ success: true, message: `Approved user ${username}` });
+});
+
+app.post("/admin/toggle-admin", auth, (req, res) => {
+    if (!data.users[req.user] || !data.users[req.user].admin) {
+        return res.status(403).json({ error: "Admin access required" });
+    }
+    const { username } = req.body;
+    if (!data.users[username]) {
+        return res.status(404).json({ error: "User not found" });
+    }
+
+    data.users[username].admin = !data.users[username].admin;
+    save(data);
+
+    res.json({ success: true, admin: data.users[username].admin });
 });
 
 app.post("/admin/reject", auth, (req, res) => {

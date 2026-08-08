@@ -169,6 +169,8 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
 .user-info .name { font-weight: 600; font-size: 0.95rem; color: #fff; }
 .user-info .badge { font-size: 0.65rem; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
 
+.footer-btns { display: flex; gap: 4px; }
+
 .btn-admin-approvals {
     background: rgba(234, 179, 8, 0.15); color: #fde047;
     border: 1px solid rgba(234, 179, 8, 0.4);
@@ -253,7 +255,7 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
 .modal-overlay.active { display: flex; }
 .modal-box {
     background: var(--bg-sidebar); border: 1px solid var(--border);
-    padding: 24px; border-radius: var(--radius); width: 380px; box-shadow: var(--shadow);
+    padding: 24px; border-radius: var(--radius); width: 420px; box-shadow: var(--shadow);
 }
 .modal-box h3 { margin-bottom: 16px; color: #fff; }
 .modal-box input { width: 100%; margin-bottom: 12px; }
@@ -266,9 +268,10 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
     display: flex; justify-content: space-between; align-items: center;
 }
 .pending-user-name { font-weight: 600; color: #fff; font-size: 0.95rem; }
-.pending-actions { display: flex; gap: 6px; }
+.pending-actions { display: flex; gap: 6px; align-items: center; }
 .btn-approve { background: var(--success); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
 .btn-reject { background: var(--danger); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+.btn-toggle-admin { background: var(--accent); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
 
 @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -288,11 +291,11 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
 
         <div class="input-group">
             <label>Username</label>
-            <input id="loginUser" value="isaac">
+            <input id="loginUser" placeholder="Enter username" value="">
         </div>
         <div class="input-group">
             <label>Password</label>
-            <input id="loginPass" type="password" value="123">
+            <input id="loginPass" type="password" placeholder="Enter password" value="">
         </div>
 
         <button id="btnAuthSubmit" class="btn-primary" onclick="handleAuthSubmit()">Connect</button>
@@ -314,7 +317,7 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
         </div>
         
         <button id="btnAdminApprovals" class="btn-admin-approvals" onclick="openAdminApprovalsModal()">
-            🔔 Pending Approvals (<span id="pendingCount">0</span>)
+            🔔 Manage Users (<span id="pendingCount">0</span>)
         </button>
 
         <div class="section-label">
@@ -325,15 +328,18 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
         <div class="user-footer">
             <div class="user-profile">
                 <div class="avatar">
-                    <span id="userAvatarChar">I</span>
+                    <span id="userAvatarChar">?</span>
                     <div class="status-dot"></div>
                 </div>
                 <div class="user-info">
-                    <div class="name" id="displayUsername">isaac</div>
-                    <span class="badge" id="displayRoleBadge">Admin</span>
+                    <div class="name" id="displayUsername">User</div>
+                    <span class="badge" id="displayRoleBadge">User</span>
                 </div>
             </div>
-            <button class="btn-icon" onclick="logout()" title="Logout">🚪</button>
+            <div class="footer-btns">
+                <button class="btn-icon" onclick="openChangePasswordModal()" title="Change Password">🔑</button>
+                <button class="btn-icon" onclick="logout()" title="Logout">🚪</button>
+            </div>
         </div>
     </div>
 
@@ -363,11 +369,39 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
     </div>
 </div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div id="changePasswordModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>Change Password</h3>
+        <div class="input-group">
+            <label>New Password</label>
+            <input id="newPasswordInput" type="password" placeholder="Enter new password">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeModals()">Cancel</button>
+            <button class="btn-primary" style="width:auto; padding:10px 18px;" onclick="submitChangePassword()">Update Password</button>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN USER MANAGEMENT & APPROVALS MODAL -->
 <div id="adminApprovalsModal" class="modal-overlay">
     <div class="modal-box">
-        <h3>Pending User Approvals</h3>
-        <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:16px;">Approve or reject new users requesting to join Babcord.</p>
-        <div id="pendingUsersList"></div>
+        <h3>User Management & Approvals</h3>
+        
+        <div class="auth-tabs" style="margin-bottom:16px;">
+            <button id="tabAdminPending" class="auth-tab active" onclick="switchAdminTab('pending')">Pending Requests</button>
+            <button id="tabAdminUsers" class="auth-tab" onclick="switchAdminTab('users')">All Users</button>
+        </div>
+
+        <div id="adminPendingView">
+            <div id="pendingUsersList"></div>
+        </div>
+
+        <div id="adminUsersView" style="display:none;">
+            <div id="allUsersList"></div>
+        </div>
+
         <div class="modal-actions">
             <button class="btn-secondary" onclick="closeModals()">Close</button>
         </div>
@@ -456,6 +490,8 @@ async function login() {
     const username = document.getElementById("loginUser").value.trim();
     const password = document.getElementById("loginPass").value.trim();
 
+    if (!username || !password) return showStatus("Username and password required", true);
+
     try {
         const res = await fetch(SERVER + "/login", {
             method: "POST",
@@ -487,7 +523,7 @@ async function login() {
         connectWS();
         await loadServers();
     } catch (e) {
-        showStatus("Could not connect to server. Is node server.js running?", true);
+        showStatus("Could not connect to server.", true);
     }
 }
 
@@ -515,6 +551,28 @@ async function register() {
     }
 }
 
+function openChangePasswordModal() {
+    document.getElementById("newPasswordInput").value = "";
+    document.getElementById("changePasswordModal").classList.add("active");
+}
+
+async function submitChangePassword() {
+    const newPassword = document.getElementById("newPasswordInput").value.trim();
+    if (!newPassword) return alert("Please enter a new password");
+
+    const res = await fetch(SERVER + "/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: token },
+        body: JSON.stringify({ newPassword })
+    });
+
+    const data = await res.json();
+    if (!res.ok) return alert(data.error || "Failed to update password");
+
+    alert(data.message);
+    closeModals();
+}
+
 function logout() { location.reload(); }
 
 async function checkPendingUsers() {
@@ -526,8 +584,25 @@ async function checkPendingUsers() {
     document.getElementById("pendingCount").textContent = count;
 }
 
+function switchAdminTab(tab) {
+    if (tab === 'pending') {
+        document.getElementById("tabAdminPending").classList.add("active");
+        document.getElementById("tabAdminUsers").classList.remove("active");
+        document.getElementById("adminPendingView").style.display = "block";
+        document.getElementById("adminUsersView").style.display = "none";
+    } else {
+        document.getElementById("tabAdminUsers").classList.add("active");
+        document.getElementById("tabAdminPending").classList.remove("active");
+        document.getElementById("adminUsersView").style.display = "block";
+        document.getElementById("adminPendingView").style.display = "none";
+        loadAllUsers();
+    }
+}
+
 async function openAdminApprovalsModal() {
     if (!isAdmin) return;
+    switchAdminTab('pending');
+    
     const res = await fetch(SERVER + "/admin/pending", { headers: { Authorization: token } });
     const pending = await res.json();
     const list = document.getElementById("pendingUsersList");
@@ -543,6 +618,7 @@ async function openAdminApprovalsModal() {
             div.innerHTML = `
                 <span class="pending-user-name">${uname}</span>
                 <div class="pending-actions">
+                    <label style="font-size:0.75rem; color:var(--text-secondary);"><input type="checkbox" id="chkAdmin_${uname}"> Make Admin</label>
                     <button class="btn-approve" onclick="approveUser('${uname}')">Approve ✓</button>
                     <button class="btn-reject" onclick="rejectUser('${uname}')">Reject ✕</button>
                 </div>
@@ -554,11 +630,46 @@ async function openAdminApprovalsModal() {
     document.getElementById("adminApprovalsModal").classList.add("active");
 }
 
-async function approveUser(username) {
-    const res = await fetch(SERVER + "/admin/approve", {
+async function loadAllUsers() {
+    const res = await fetch(SERVER + "/admin/users", { headers: { Authorization: token } });
+    const users = await res.json();
+    const list = document.getElementById("allUsersList");
+    list.innerHTML = "";
+
+    for (const uname in users) {
+        const u = users[uname];
+        const div = document.createElement("div");
+        div.className = "pending-user-card";
+        div.innerHTML = `
+            <div>
+                <span class="pending-user-name">${uname}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted); margin-left:8px;">${u.admin ? '(Admin)' : '(User)'}</span>
+            </div>
+            <div class="pending-actions">
+                ${uname !== currentUser ? `<button class="btn-toggle-admin" onclick="toggleUserAdmin('${uname}')">${u.admin ? 'Remove Admin' : 'Make Admin'}</button>` : '<span style="font-size:0.75rem; color:var(--text-muted);">You</span>'}
+            </div>
+        `;
+        list.appendChild(div);
+    }
+}
+
+async function toggleUserAdmin(username) {
+    const res = await fetch(SERVER + "/admin/toggle-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: token },
         body: JSON.stringify({ username })
+    });
+    if (res.ok) {
+        loadAllUsers();
+    }
+}
+
+async function approveUser(username) {
+    const makeAdmin = document.getElementById(`chkAdmin_${username}`) ? document.getElementById(`chkAdmin_${username}`).checked : false;
+    const res = await fetch(SERVER + "/admin/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: token },
+        body: JSON.stringify({ username, makeAdmin })
     });
     if (res.ok) {
         openAdminApprovalsModal();
