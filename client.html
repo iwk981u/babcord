@@ -441,8 +441,13 @@ body, html { height: 100%; background: var(--bg-darkest); color: var(--text-prim
 </div>
 
 <script>
-const SERVER = window.location.origin;
-const WS_SERVER = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host;
+let SERVER = window.location.origin;
+let WS_SERVER = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host;
+
+if (window.location.protocol === "file:" || !window.location.host || window.location.origin === "null") {
+    SERVER = "http://localhost:8080";
+    WS_SERVER = "ws://localhost:8080";
+}
 
 let token = null;
 let currentUser = null;
